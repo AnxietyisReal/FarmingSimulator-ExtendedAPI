@@ -15,10 +15,11 @@ import (
 type FTPServer struct {
 	Host     string `json:"host"`
 	Path     string `json:"path"`
-	File     string `json:"file"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+var File string
 
 func JSONLoader(file string) FTPServer {
 	var ftpServerFile FTPServer
@@ -45,7 +46,7 @@ func ftpConnection() string {
 	}
 
 	c.ChangeDir(FTP.Path)
-	xmlFile, err := c.Retr(FTP.File)
+	xmlFile, err := c.Retr(File)
 	if err != nil {
 		panic(err)
 	}
@@ -60,9 +61,10 @@ func main() {
 	g := gin.Default()
 	g.ForwardedByClientIP = true
 
-	g.GET("/", func(c *gin.Context) {
+	g.GET("/:file", func(c *gin.Context) {
 		c.Header("Host", "FarmingSimulator-ExtendedAPI/Golang")
 		c.Header("Content-Type", "application/xml")
+		File = c.Param("file")
 		c.Status(http.StatusOK)
 		c.Writer.Write([]byte(ftpConnection()))
 	})
