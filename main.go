@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fufuok/favicon"
 	"github.com/gin-gonic/gin"
 	"github.com/jlaffaye/ftp"
 )
@@ -19,6 +21,8 @@ type FTPServer struct {
 	Password string `json:"password"`
 }
 
+//go:embed FSAPI.png
+var Favicon embed.FS
 var File string
 
 func JSONLoader(file string) FTPServer {
@@ -59,6 +63,10 @@ func ftpConnection() string {
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.Default()
+	g.Use(favicon.New(favicon.Config{
+		File:       "FSAPI.png",
+		FileSystem: http.FS(Favicon),
+	}))
 	g.ForwardedByClientIP = true
 
 	g.GET("/:file", func(c *gin.Context) {
@@ -69,5 +77,5 @@ func main() {
 		c.Writer.Write([]byte(ftpConnection()))
 	})
 
-	g.Run(":8095")
+	_ = g.Run(":8095")
 }
