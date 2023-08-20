@@ -21,7 +21,7 @@ type FTPServer struct {
 var File string
 
 func ftpConnection() string {
-	FTP := &FTPServer{Host: os.Getenv("ftp-host"), Path: os.Getenv("ftp-path"), Username: os.Getenv("ftp-user"), Password: os.Getenv("ftp-pass")}
+	FTP := &FTPServer{Host: os.Getenv("ftphost"), Path: os.Getenv("ftppath"), Username: os.Getenv("ftpuser"), Password: os.Getenv("ftppass")}
 	c, err := ftp.Dial(FTP.Host, ftp.DialWithTimeout(30*time.Second))
 	if err != nil {
 		fmt.Printf("ftp error: %s", err)
