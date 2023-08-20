@@ -1,44 +1,27 @@
 package main
 
 import (
-	"embed"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/fufuok/favicon"
 	"github.com/gin-gonic/gin"
 	"github.com/jlaffaye/ftp"
 )
 
 type FTPServer struct {
-	Host     string `json:"host"`
-	Path     string `json:"path"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Host     string
+	Path     string
+	Username string
+	Password string
 }
 
-//go:embed FSAPI.png
-var Favicon embed.FS
 var File string
 
-func JSONLoader(file string) FTPServer {
-	var ftpServerFile FTPServer
-	loader, err := os.Open(file)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	defer loader.Close()
-	parseJson := json.NewDecoder(loader)
-	parseJson.Decode(&ftpServerFile)
-	return ftpServerFile
-}
-
 func ftpConnection() string {
-	FTP := JSONLoader("ftp_details.json")
+	FTP := &FTPServer{Host: os.Getenv("ftp-host"), Path: os.Getenv("ftp-path"), Username: os.Getenv("ftp-user"), Password: os.Getenv("ftp-pass")}
 	c, err := ftp.Dial(FTP.Host, ftp.DialWithTimeout(30*time.Second))
 	if err != nil {
 		fmt.Printf("ftp error: %s", err)
@@ -63,10 +46,6 @@ func ftpConnection() string {
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.Default()
-	g.Use(favicon.New(favicon.Config{
-		File:       "FSAPI.png",
-		FileSystem: http.FS(Favicon),
-	}))
 	g.ForwardedByClientIP = true
 
 	g.GET("/:file", func(c *gin.Context) {
@@ -75,6 +54,12 @@ func main() {
 		File = c.Param("file")
 		c.Status(http.StatusOK)
 		c.Writer.Write([]byte(ftpConnection()))
+	})
+
+	g.GET("/favicon.ico", func(c *gin.Context) {
+		c.Header("Host", "FarmingSimulator-ExtendedAPI/Golang")
+		c.Header("Content-Type", "image/x-icon")
+		c.Status(http.StatusOK)
 	})
 
 	_ = g.Run(":8095")
